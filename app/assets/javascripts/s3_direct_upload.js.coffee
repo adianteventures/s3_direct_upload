@@ -23,11 +23,13 @@ $.fn.S3Uploader = (options) ->
     progress_bar_target: null
     click_submit_target: null
     allow_multiple_files: true
+    drop_zone: null
 
   $.extend settings, options
 
   current_files = []
   forms_for_submit = []
+  successful_uploads = []
   if settings.click_submit_target
     settings.click_submit_target.click ->
       form.submit() for form in forms_for_submit
@@ -36,15 +38,23 @@ $.fn.S3Uploader = (options) ->
   setUploadForm = ->
     $uploadForm.fileupload
 
+      dropZone: settings.drop_zone
+
       add: (e, data) ->
         file = data.files[0]
         file.unique_id = Math.random().toString(36).substr(2,16)
 
         unless settings.before_add and not settings.before_add(file)
+          if (current_files.length == 0)
+            $uploadForm.trigger("s3_uploads_add_first", [])
+          
           current_files.push data
           if $('#template-upload').length > 0
             data.context = $($.trim(tmpl("template-upload", file)))
-            $(data.context).appendTo(settings.progress_bar_target || $uploadForm)
+            _progress_bar_target = null
+            if (!!settings.progress_bar_target)
+              _progress_bar_target = $(settings.progress_bar_target)
+            $(data.context).appendTo(_progress_bar_target || $uploadForm)
           else if !settings.allow_multiple_files
             data.context = settings.progress_bar_target
           if settings.click_submit_target
@@ -57,6 +67,10 @@ $.fn.S3Uploader = (options) ->
 
       start: (e) ->
         $uploadForm.trigger("s3_uploads_start", [e])
+
+      stop: (e) ->
+        $uploadForm.trigger("s3_uploads_stop", [e, successful_uploads])
+        successful_uploads = []
 
       progress: (e, data) ->
         if data.context
@@ -90,6 +104,8 @@ $.fn.S3Uploader = (options) ->
               event = $.Event('ajax:error')
               $uploadForm.trigger(event, [xhr, status, error])
               return event.result
+
+        successful_uploads.push content
 
         data.context.remove() if data.context && settings.remove_completed_progress_bar # remove progress bar
         $uploadForm.trigger("s3_upload_complete", [content])
