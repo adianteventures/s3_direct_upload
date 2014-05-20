@@ -41,6 +41,9 @@ $.fn.S3Uploader = (options) ->
       dropZone: settings.drop_zone
 
       add: (e, data) ->
+        if ( (!settings.allow_multiple_files) && (current_files.length > 0) )
+          return
+        
         file = data.files[0]
         file.unique_id = Math.random().toString(36).substr(2,16)
 
