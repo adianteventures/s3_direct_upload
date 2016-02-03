@@ -135,6 +135,7 @@ $.fn.S3Uploader = (options) ->
         key = $uploadForm.data("key")
           .replace('{timestamp}', new Date().getTime())
           .replace('{unique_id}', @files[0].unique_id)
+          .replace('{sanitized_filename}', @files[0].name.replace(/\s/g, '_').replace(/[^\w.-]/gi, ''))
           .replace('{extension}', @files[0].name.split('.').pop())
 
         # substitute upload timestamp and unique_id into key
