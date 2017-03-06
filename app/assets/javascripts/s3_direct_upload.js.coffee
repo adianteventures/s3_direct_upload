@@ -131,11 +131,19 @@ $.fn.S3Uploader = (options) ->
         data.push
           name: "content-type"
           value: fileType
-
+        
+        sanitized_filename = @files[0].name.replace(/\s/g, '_').replace(/[^\w.-]/gi, '')
+        extension = ""
+        extension_pos = sanitized_filename.lastIndexOf(".")
+        if (extension_pos > 0)
+          extension = sanitized_filename.substring(extension_pos+1, extension_pos+11)
+        if (sanitized_filename.length > 25)
+          sanitized_filename = sanitized_filename.substring(0, 20) + "." + extension
+        
         key = $uploadForm.data("key")
           .replace('{timestamp}', new Date().getTime())
           .replace('{unique_id}', @files[0].unique_id)
-          .replace('{sanitized_filename}', @files[0].name.replace(/\s/g, '_').replace(/[^\w.-]/gi, ''))
+          .replace('{sanitized_filename}', sanitized_filename)
           .replace('{extension}', @files[0].name.split('.').pop())
 
         # substitute upload timestamp and unique_id into key
